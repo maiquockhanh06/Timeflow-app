@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TIMEFLOW - Theo dõi công việc</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .stats-cards {
+            display: flex;
+            gap: 20px;
+            flex: 1;
+        }
+        
+        .stat-card {
+            flex: 1;
+            min-width: 150px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card.active {
+            border: 2px solid #3498db;
+        }
+        
+        .stat-card.pending {
+            border-top: 4px solid #e74c3c;
+        }
+        
+        .stat-card.in-progress {
+            border-top: 4px solid #f39c12;
+        }
+        
+        .stat-card.completed {
+            border-top: 4px solid #2ecc71;
+        }
+        
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        
+        .tasks-table {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .table-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+            background: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+        }
+        
+        .table-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            align-items: center;
+        }
+        
+        .table-row:hover {
+            background: #f8f9fa;
+        }
+        
+        .table-row:last-child {
+            border-bottom: none;
+        }
+        
+        .task-title-cell {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .category-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+            text-align: center;
+            min-width: 100px;
+        }
+        
+        .status-pending {
+            background: #ffeaa7;
+            color: #e17055;
+        }
+        
+        .status-in-progress {
+            background: #a29bfe;
+            color: white;
+        }
+        
+        .status-completed {
+            background: #55efc4;
+            color: #00b894;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+        
+        .btn-start {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-complete {
+            background: #2ecc71;
+            color: white;
+        }
+        
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .date-cell {
+            font-family: monospace;
+            color: #7f8c8d;
+        }
+        
+        .empty-table {
+            padding: 50px;
+            text-align: center;
+            color: #95a5a6;
+        }
+        
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-tab {
+            padding: 10px 20px;
+            background: #ecf0f1;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #7f8c8d;
+            transition: all 0.3s;
+        }
+        
+        .filter-tab:hover,
+        .filter-tab.active {
+            background: #3498db;
+            color: white;
+        }
+        
+        .add-task-btn {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            text-decoration: none;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📅 TIMEFLOW</h1>
+            <nav>
+                <a href="{{ url_for('index') }}">Trang chính</a>
+                <a href="{{ url_for('create_task') }}">Tạo công việc</a>
+                <a href="{{ url_for('manage_categories') }}">Phân loại</a>
+                <a href="{{ url_for('track_tasks') }}" class="nav-active">Theo dõi</a>
+                <a href="{{ url_for('calendar') }}">Lịch cá nhân</a>
+                <a href="{{ url_for('notifications') }}">Thông báo</a>
+                <a href="{{ url_for('statistics') }}">Thống kê</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="stats-header">
+                <h2 style="color: #2c3e50;">📊 Theo dõi công việc</h2>
+                <a href="{{ url_for('create_task') }}" class="add-task-btn">+ Thêm công việc</a>
+            </div>
+            
+            <div class="stats-cards">
+                <a href="?status=pending" class="stat-card pending {% if status_filter == 'pending' %}active{% endif %}">
+                    <div class="stat-label">CÔNG VIỆC CHƯA LÀM</div>
+                    <div class="stat-number">{{ pending_count }}</div>
+                </a>
+                
+                <a href="?status=in_progress" class="stat-card in-progress {% if status_filter == 'in_progress' %}active{% endif %}">
+                    <div class="stat-label">CÔNG VIỆC ĐANG LÀM</div>
+                    <div class="stat-number">{{ in_progress_count }}</div>
+                </a>
+                
+                <a href="?status=completed" class="stat-card completed {% if status_filter == 'completed' %}active{% endif %}">
+                    <div class="stat-label">CÔNG VIỆC HOÀN THÀNH</div>
+                    <div class="stat-number">{{ completed_count }}</div>
+                </a>
+            </div>
+            
+            <div class="filter-tabs">
+                <a href="?" class="filter-tab {% if status_filter == 'all' %}active{% endif %}">Tất cả</a>
+                <a href="?status=pending" class="filter-tab {% if status_filter == 'pending' %}active{% endif %}">Chưa làm</a>
+                <a href="?status=in_progress" class="filter-tab {% if status_filter == 'in_progress' %}active{% endif %}">Đang làm</a>
+                <a href="?status=completed" class="filter-tab {% if status_filter == 'completed' %}active{% endif %}">Hoàn thành</a>
+            </div>
+            
+            <div class="tasks-table">
+                <div class="table-header">
+                    <div>Công việc</div>
+                    <div>Phân loại</div>
+                    <div>Ngày tạo</div>
+                    <div>Hạn</div>
+                    <div>Trạng thái</div>
+                    <div>Hành động</div>
+                </div>
+                
+                {% if tasks %}
+                    {% for task in tasks %}
+                    <div class="table-row" id="task-{{ task['id'] }}">
+                        <div class="task-title-cell">
+                            <strong>{{ task['title'] }}</strong>
+                            {% if task['description'] %}
+                            <br><small style="color: #7f8c8d;">{{ task['description'][:50] }}{% if task['description']|length > 50 %}...{% endif %}</small>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span class="category-badge" style="background: #e3f2fd; color: #1976d2;">
+                                {{ task['category_name'] or 'Không phân loại' }}
+                            </span>
+                        </div>
+                        <div class="date-cell">{{ task['created_date'] }}</div>
+                        <div class="date-cell">
+                            {{ task['due_date'] }}
+                            {% if task['due_time'] %}
+                            <br><small>{{ task['due_time'] }}</small>
+                            {% endif %}
+                        </div>
+                        <div>
+                            {% if task['status'] == 'pending' %}
+                            <span class="status-badge status-pending">Chưa làm</span>
+                            {% elif task['status'] == 'in_progress' %}
+                            <span class="status-badge status-in-progress">Đang làm</span>
+                            {% elif task['status'] == 'completed' %}
+                            <span class="status-badge status-completed">Hoàn thành</span>
+                            {% endif %}
+                        </div>
+                        <div class="action-buttons">
+                            {% if task['status'] == 'pending' %}
+                            <button class="btn-sm btn-start" onclick="updateTaskStatus({{ task['id'] }}, 'in_progress')">Bắt đầu</button>
+                            <button class="btn-sm btn-complete" onclick="updateTaskStatus({{ task['id'] }}, 'completed')">Hoàn thành</button>
+                            {% elif task['status'] == 'in_progress' %}
+                            <button class="btn-sm btn-complete" onclick="updateTaskStatus({{ task['id'] }}, 'completed')">Hoàn thành</button>
+                            <button class="btn-sm" onclick="updateTaskStatus({{ task['id'] }}, 'pending')">Tạm dừng</button>
+                            {% endif %}
+                            <button class="btn-sm btn-delete" onclick="deleteTask({{ task['id'] }})">Xóa</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-table">
+                        <h3>📭 Không có công việc nào</h3>
+                        <p>{% if status_filter != 'all' %}
+                            Không có công việc ở trạng thái này.
+                        {% else %}
+                            Hãy thêm công việc đầu tiên để bắt đầu!
+                        {% endif %}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function updateTaskStatus(taskId, status) {
+            try {
+                const response = await fetch(`/update-task-status/${taskId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ status: status })
+                });
+                
+                if (response.ok) {
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        function deleteTask(taskId) {
+            if (confirm('Bạn có chắc muốn xóa công việc này?')) {
+                // Thêm code xử lý xóa ở đây
+                alert('Chức năng xóa đang được phát triển');
+            }
+        }
+    </script>
+</body>
+</html>

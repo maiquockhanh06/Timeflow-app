@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TIMEFLOW - Cài đặt thông báo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .settings-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .setting-group {
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .setting-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .setting-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .setting-title::before {
+            content: "⚙️";
+            font-size: 1.2em;
+        }
+        
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f8f9fa;
+        }
+        
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        
+        .setting-label {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        
+        .setting-description {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #3498db;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        select {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            min-width: 200px;
+        }
+        
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .volume-slider {
+            width: 200px;
+            height: 8px;
+            -webkit-appearance: none;
+            background: #ddd;
+            border-radius: 4px;
+            outline: none;
+        }
+        
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #3498db;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .volume-value {
+            min-width: 40px;
+            text-align: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .reminder-time {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .reminder-select {
+            min-width: 150px;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #f0f0f0;
+        }
+        
+        .btn-save {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+        }
+        
+        .btn-cancel {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .sound-options {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .sound-option {
+            padding: 10px 20px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .sound-option:hover,
+        .sound-option.active {
+            border-color: #3498db;
+            background: #e3f2fd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📅 TIMEFLOW</h1>
+            <nav>
+                <a href="{{ url_for('index') }}">Trang chính</a>
+                <a href="{{ url_for('create_task') }}">Tạo công việc</a>
+                <a href="{{ url_for('manage_categories') }}">Phân loại</a>
+                <a href="{{ url_for('track_tasks') }}">Theo dõi</a>
+                <a href="{{ url_for('calendar') }}">Lịch cá nhân</a>
+                <a href="{{ url_for('notifications') }}" class="nav-active">Thông báo</a>
+                <a href="{{ url_for('statistics') }}">Thống kê</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="settings-container">
+                <h2 style="color: #2c3e50; margin-bottom: 30px;">🔔 Cài đặt thông báo</h2>
+                
+                <form method="POST">
+                    <div class="setting-group">
+                        <div class="setting-title">Thông báo chung</div>
+                        
+                        <div class="setting-item">
+                            <div>
+                                <div class="setting-label">Nhắc deadline</div>
+                                <div class="setting-description">Nhận thông báo trước khi đến hạn</div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" name="deadline_notification" {% if settings and settings['deadline_notification'] %}checked{% endif %}>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div>
+                                <div class="setting-label">Email</div>
+                                <div class="setting-description">Gửi thông báo qua email</div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" name="email_notification" {% if settings and settings['email_notification'] %}checked{% endif %}>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div>
+                                <div class="setting-label">Push notification</div>
+                                <div class="setting-description">Nhận thông báo đẩy trên thiết bị</div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" name="push_notification" {% if settings and settings['push_notification'] %}checked{% endif %}>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <div class="setting-title">Thời gian nhắc nhở</div>
+                        
+                        <div class="setting-item">
+                            <div>
+                                <div class="setting-label">Thời gian nhắc trước deadline</div>
+                                <div class="setting-description">Chọn thời gian nhận thông báo trước khi deadline đến</div>
+                            </div>
+                            <div class="reminder-time">
+                                <select name="reminder_time" class="reminder-select">
+                                    <option value="1" {% if settings and settings['reminder_time'] == 1 %}selected{% endif %}>1 giờ trước</option>
+                                    <option value="3" {% if settings and settings['reminder_time'] == 3 %}selected{% endif %}>3 giờ trước</option>
+                                    <option value="6" {% if settings and settings['reminder_time'] == 6 %}selected{% endif %}>6 giờ trước</option>
+                                    <option value="12" {% if settings and settings['reminder_time'] == 12 %}selected{% endif %}>12 giờ trước</option>
+                                    <option value="24" {% if settings and settings['reminder_time'] == 24 %}selected{% endif %}>1 ngày trước</option>
+                                    <option value="168" {% if settings and settings['reminder_time'] == 168 %}selected{% endif %}>1 tuần trước</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <div class="setting-title">Âm thanh thông báo</div>
+                        
+                        <div class="setting-item">
+                            <div>
+                                <div class="setting-label">Chọn âm thanh</div>
+                                <div class="setting-description">Chọn âm thanh cho thông báo</div>
+                            </div>
+                            <div class="sound-options">
+                                <label class="sound-option {% if settings and settings['sound'] == 'default' %}active{% endif %}">
+                                    <input type="radio" name="sound" value="default" {% if not settings or settings['sound'] == 'default' %}checked{% endif %} style="display: none;">
+                                    Mặc định
+                                </label>
+                                <label class="sound-option {% if settings and settings['sound'] == 'chime' %}active{% endif %}">
+                                    <input type="radio" name="sound" value="chime" {% if settings and settings['sound'] == 'chime' %}checked{% endif %} style="display: none;">
+                                    Chuông
+                                </label>
+                                <label class="sound-option {% if settings and settings['sound'] == 'bell' %}active{% endif %}">
+                                    <input type="radio" name="sound" value="bell" {% if settings and settings['sound'] == 'bell' %}checked{% endif %} style="display: none;">
+                                    Chuông lớn
+                                </label>
+                                <label class="sound-option {% if settings and settings['sound'] == 'ding' %}active{% endif %}">
+                                    <input type="radio" name="sound" value="ding" {% if settings and settings['sound'] == 'ding' %}checked{% endif %} style="display: none;">
+                                    Tiếng "ding"
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div>
+                                <div class="setting-label">Âm lượng</div>
+                                <div class="setting-description">Điều chỉnh âm lượng thông báo</div>
+                            </div>
+                            <div class="volume-control">
+                                <input type="range" min="0" max="100" value="{{ settings['volume'] if settings else 70 }}" 
+                                       class="volume-slider" name="volume" id="volumeSlider"
+                                       oninput="document.getElementById('volumeValue').textContent = this.value + '%'">
+                                <span class="volume-value" id="volumeValue">{{ settings['volume'] if settings else 70 }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn-save">💾 Lưu cài đặt</button>
+                        <a href="{{ url_for('index') }}" class="btn-cancel">Hủy</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Xử lý click cho các option âm thanh
+        document.querySelectorAll('.sound-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.sound-option').forEach(opt => {
+                    opt.classList.remove('active');
+                });
+                this.classList.add('active');
+                this.querySelector('input[type="radio"]').checked = true;
+            });
+        });
+        
+        // Khởi tạo giá trị volume
+        document.getElementById('volumeValue').textContent = document.getElementById('volumeSlider').value + '%';
+    </script>
+</body>
+</html>

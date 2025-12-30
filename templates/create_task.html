@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TIMEFLOW - Tạo công việc mới</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>TIMEFLOW</h1>
+            <nav>
+                <a href="{{ url_for('index') }}">Trang chính</a>
+                <a href="{{ url_for('create_task') }}" class="active">Tạo công việc</a>
+                <a href="{{ url_for('manage_categories') }}">Phân loại</a>
+                <a href="{{ url_for('track_tasks') }}">Theo dõi</a>
+                <a href="{{ url_for('calendar') }}">Lịch cá nhân</a>
+                <a href="{{ url_for('notifications') }}">Thông báo</a>
+                <a href="{{ url_for('statistics') }}">Thống kê</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="form-container">
+                <h2>Thêm công việc mới vào danh sách của bạn</h2>
+                
+                <form method="POST" class="task-form">
+                    <div class="form-group">
+                        <label for="title">Tên công việc *</label>
+                        <input type="text" id="title" name="title" placeholder="Nhập tên công việc" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Mô tả (tùy chọn)</label>
+                        <textarea id="description" name="description" placeholder="Nhập mô tả công việc" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Ngày tạo</label>
+                            <input type="text" value="{{ now }}" readonly class="readonly">
+                        </div>
+                        <div class="form-group">
+                            <label for="due_date">Hạn hoàn thành *</label>
+                            <input type="date" id="due_date" name="due_date" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="due_time">Giờ hạn (tùy chọn)</label>
+                            <input type="time" id="due_time" name="due_time">
+                        </div>
+                        <div class="form-group">
+                            <label for="category_id">Phân loại</label>
+                            <select id="category_id" name="category_id">
+                                {% for category in categories %}
+                                <option value="{{ category['id'] }}">{{ category['name'] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Lưu công việc</button>
+                        <a href="{{ url_for('index') }}" class="btn-secondary">Hủy</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

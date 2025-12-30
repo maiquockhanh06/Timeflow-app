@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TIMEFLOW - Lịch cá nhân</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .month-navigation {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .nav-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .current-month {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            min-width: 200px;
+            text-align: center;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 40px;
+        }
+        
+        .day-header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .day-cell {
+            background: white;
+            min-height: 120px;
+            padding: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .day-cell:hover {
+            background: #f8f9fa;
+        }
+        
+        .day-cell.today {
+            background: #e3f2fd;
+        }
+        
+        .day-number {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .event-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #e74c3c;
+            display: inline-block;
+            margin-right: 3px;
+        }
+        
+        .task-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #3498db;
+            display: inline-block;
+            margin-right: 3px;
+        }
+        
+        .day-events {
+            margin-top: 5px;
+            font-size: 0.8em;
+            color: #7f8c8d;
+        }
+        
+        .upcoming-events {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .events-list {
+            margin-top: 20px;
+        }
+        
+        .event-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .event-item:last-child {
+            border-bottom: none;
+        }
+        
+        .event-info h4 {
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+        }
+        
+        .event-time {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        
+        .event-date {
+            color: #95a5a6;
+            font-size: 0.85em;
+        }
+        
+        .add-event-btn {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+        }
+        
+        .share-btn {
+            background: #9b59b6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .empty-events {
+            text-align: center;
+            padding: 30px;
+            color: #95a5a6;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 10px;
+            position: relative;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #95a5a6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📅 TIMEFLOW</h1>
+            <nav>
+                <a href="{{ url_for('index') }}">Trang chính</a>
+                <a href="{{ url_for('create_task') }}">Tạo công việc</a>
+                <a href="{{ url_for('manage_categories') }}">Phân loại</a>
+                <a href="{{ url_for('track_tasks') }}">Theo dõi</a>
+                <a href="{{ url_for('calendar') }}" class="nav-active">Lịch cá nhân</a>
+                <a href="{{ url_for('notifications') }}">Thông báo</a>
+                <a href="{{ url_for('statistics') }}">Thống kê</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="calendar-header">
+                <div class="month-navigation">
+                    <button class="nav-btn" onclick="changeMonth(-1)">←</button>
+                    <div class="current-month">Tháng {{ month }} / {{ year }}</div>
+                    <button class="nav-btn" onclick="changeMonth(1)">→</button>
+                </div>
+                <button class="share-btn" onclick="shareCalendar()">🔗 Chia sẻ lịch trình</button>
+            </div>
+            
+            <div class="calendar-grid">
+                <div class="day-header">CN</div>
+                <div class="day-header">T2</div>
+                <div class="day-header">T3</div>
+                <div class="day-header">T4</div>
+                <div class="day-header">T5</div>
+                <div class="day-header">T6</div>
+                <div class="day-header">T7</div>
+                
+                <!-- Các ngày trong tháng -->
+                {% for day in range(1, 32) %}
+                <div class="day-cell {% if day == 25 %}today{% endif %}" onclick="showDayEvents('{{ year }}-{{ month }}-{{ "%02d" % day }}')">
+                    <div class="day-number">{{ day }}</div>
+                    {% if day == 28 %}
+                    <div class="day-events">
+                        <span class="event-dot"></span> Họp team (09:00)<br>
+                        <span class="event-dot"></span> Gặp khách hàng (14:00)
+                    </div>
+                    {% elif day == 29 %}
+                    <div class="day-events">
+                        <span class="task-dot"></span> Review code
+                    </div>
+                    {% elif day == 25 %}
+                    <div class="day-events">
+                        <span class="task-dot"></span> Đi mua sắm
+                    </div>
+                    {% elif day == 30 %}
+                    <div class="day-events">
+                        <span class="task-dot"></span> Học React
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="upcoming-events">
+                <h3 style="color: #2c3e50; margin-bottom: 20px;">📅 Sự kiện sắp tới</h3>
+                
+                <div class="events-list">
+                    <div class="event-item">
+                        <div class="event-info">
+                            <h4>Họp team</h4>
+                            <div class="event-time">⏰ 09:00</div>
+                            <div class="event-date">📅 Chủ Nhật, 28 tháng 12, 2025</div>
+                        </div>
+                    </div>
+                    
+                    <div class="event-item">
+                        <div class="event-info">
+                            <h4>Gặp khách hàng</h4>
+                            <div class="event-time">⏰ 14:00</div>
+                            <div class="event-date">📅 Chủ Nhật, 28 tháng 12, 2025</div>
+                        </div>
+                    </div>
+                    
+                    <div class="event-item">
+                        <div class="event-info">
+                            <h4>Review code</h4>
+                            <div class="event-time">⏰ 10:00</div>
+                            <div class="event-date">📅 Thứ Hai, 29 tháng 12, 2025</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="add-event-btn" onclick="addEvent()">+ Thêm sự kiện</button>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modal hiển thị chi tiết ngày -->
+    <div id="dayModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h3 id="modalTitle">Chi tiết ngày</h3>
+            <div id="modalContent">
+                Đang tải...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function changeMonth(delta) {
+            let month = parseInt("{{ month }}");
+            let year = parseInt("{{ year }}");
+            
+            month += delta;
+            if (month > 12) {
+                month = 1;
+                year += 1;
+            } else if (month < 1) {
+                month = 12;
+                year -= 1;
+            }
+            
+            window.location.href = `/calendar?month=${month}&year=${year}`;
+        }
+        
+        function showDayEvents(date) {
+            fetch(`/get-tasks-by-date/${date}`)
+                .then(response => response.json())
+                .then(tasks => {
+                    let modalContent = '';
+                    
+                    if (tasks.length > 0) {
+                        modalContent = '<h4>Công việc:</h4><ul>';
+                        tasks.forEach(task => {
+                            modalContent += `<li>${task.title} (${task.due_time || 'Cả ngày'})</li>`;
+                        });
+                        modalContent += '</ul>';
+                    } else {
+                        modalContent = '<p>Không có công việc nào trong ngày này.</p>';
+                    }
+                    
+                    document.getElementById('modalTitle').textContent = `Ngày ${date}`;
+                    document.getElementById('modalContent').innerHTML = modalContent;
+                    document.getElementById('dayModal').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('modalContent').textContent = 'Có lỗi xảy ra khi tải dữ liệu.';
+                });
+        }
+        
+        function closeModal() {
+            document.getElementById('dayModal').style.display = 'none';
+        }
+        
+        function shareCalendar() {
+            fetch('/create-share-code', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(`Mã chia sẻ của bạn: ${data.share_code}\n\nGửi mã này cho người khác để họ xem lịch của bạn.`);
+            });
+        }
+        
+        function addEvent() {
+            alert('Chức năng thêm sự kiện đang được phát triển');
+        }
+        
+        // Đóng modal khi click ra ngoài
+        window.onclick = function(event) {
+            const modal = document.getElementById('dayModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
