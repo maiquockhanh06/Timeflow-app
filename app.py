@@ -103,7 +103,7 @@ def init_db():
 
 # ========== ROUTES ==========
 
-# Trang chính (Ảnh 1)
+# Trang chính 
 @app.route('/')
 def index():
     db = get_db()
@@ -142,7 +142,7 @@ def index():
                          pending_count=pending_count,
                          in_progress_count=in_progress_count)
 
-# Trang tạo công việc mới (Ảnh 2)
+# Trang tạo công việc mới 
 @app.route('/create-task', methods=['GET', 'POST'])
 def create_task():
     db = get_db()
@@ -169,7 +169,7 @@ def create_task():
     
     return render_template('create_task.html', categories=categories)
 
-# Quản lý phân loại (Ảnh 3)
+# Quản lý phân loại 
 @app.route('/manage-categories', methods=['GET', 'POST'])
 def manage_categories():
     db = get_db()
@@ -194,7 +194,7 @@ def manage_categories():
     
     return render_template('manage_categories.html', categories=categories)
 
-# Theo dõi công việc (Ảnh 4)
+# Theo dõi công việc 
 @app.route('/track-tasks')
 def track_tasks():
     db = get_db()
@@ -255,7 +255,7 @@ def update_task_status(task_id):
     db.commit()
     return jsonify({'success': True})
 
-# Lịch cá nhân (Ảnh 5)
+# Lịch cá nhân 
 @app.route('/calendar')
 def calendar():
     db = get_db()
@@ -331,7 +331,7 @@ def create_share_code():
     db.commit()
     return jsonify({'share_code': share_code})
 
-# Cài đặt thông báo (Ảnh 6)
+# Cài đặt thông báo 
 @app.route('/notifications', methods=['GET', 'POST'])
 def notifications():
     db = get_db()
@@ -365,7 +365,7 @@ def notifications():
     
     return render_template('notifications.html', settings=notification_settings)
 
-# Thống kê (Ảnh 7)
+# Thống kê 
 @app.route('/statistics')
 def statistics():
     db = get_db()
